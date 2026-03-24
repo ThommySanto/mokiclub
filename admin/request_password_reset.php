@@ -20,65 +20,80 @@ if ($usernameOrEmail === '') {
 }
 
 $ip = app_request_ip();
+
+// Rate limit
 $rateKey = 'admin_pwreset:' . $ip . ':' . strtolower($usernameOrEmail);
 $maxAttempts = 5;
-$windowSeconds = 900; // 15 min
-
+$windowSeconds = 900;
 if (app_rate_limit_is_blocked($rateKey, $maxAttempts, $windowSeconds)) {
     header('Location: forgot_password.php?sent=1');
     exit();
 }
-
-// Consuma 1 tentativo subito (anti abuso anche se l'utente non esiste)
 app_rate_limit_increment($rateKey, $windowSeconds);
 
+// Find admin (no get_result)
 $isEmail = strpos($usernameOrEmail, '@') !== false;
-
 if ($isEmail) {
     $stmt = $conn->prepare('SELECT id, username, email FROM utenti_admin WHERE email = ? LIMIT 1');
-    $stmt->bind_param('s', $usernameOrEmail);
 } else {
     $stmt = $conn->prepare('SELECT id, username, email FROM utenti_admin WHERE username = ? LIMIT 1');
-    $stmt->bind_param('s', $usernameOrEmail);
 }
 
-$stmt->execute();
-$result = $stmt->get_result();
-$admin = $result ? $result->fetch_assoc() : null;
+$found = false;
+$adminId = null;
+$adminUsername = null;
+$adminEmail = null;
 
-if ($admin && !empty($admin['email'])) {
-    // Invalida token precedenti non usati
-    $stmt = $conn->prepare('UPDATE admin_password_resets SET used_at = NOW() WHERE admin_id = ? AND used_at IS NULL');
-    $stmt->bind_param('i', $admin['id']);
+if ($stmt) {
+    $stmt->bind_param('s', $usernameOrEmail);
     $stmt->execute();
+    $stmt->bind_result($adminId, $adminUsername, $adminEmail);
+    $found = (bool)$stmt->fetch();
+    $stmt->close();
+}
 
-    // Genera token e salva hash
+if ($found && !empty($adminEmail)) {
+    $adminId = (int)$adminId;
+    $adminUsername = (string)$adminUsername;
+    $adminEmail = (string)$adminEmail;
+
+    // Invalidate previous tokens
+    $stmt = $conn->prepare('UPDATE admin_password_resets SET used_at = NOW() WHERE admin_id = ? AND used_at IS NULL');
+    if ($stmt) {
+        $stmt->bind_param('i', $adminId);
+        $stmt->execute();
+        $stmt->close();
+    }
+
     $token = bin2hex(random_bytes(32));
     $token_hash = hash('sha256', $token);
 
-    // Insert usando tempo DB (evita problemi timezone)
+    // Insert token
     $stmt = $conn->prepare(
         'INSERT INTO admin_password_resets (admin_id, token_hash, created_at, expires_at, used_at, request_ip)
          VALUES (?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 30 MINUTE), NULL, ?)'
     );
-    $stmt->bind_param('iss', $admin['id'], $token_hash, $ip);
-    $stmt->execute();
 
-    $resetUrl = 'https://mokiclub.infinityfreeapp.com/admin/reset_password.php?token=' . urlencode($token);
+    if ($stmt) {
+        $stmt->bind_param('iss', $adminId, $token_hash, $ip);
+        $stmt->execute();
+        $stmt->close();
 
-    $subject = 'Reset password area admin Moki Club';
-    $body =
-        "Ciao " . $admin['username'] . ",\n\n" .
-        "Abbiamo ricevuto una richiesta di reset password per il tuo account admin.\n" .
-        "Se non hai richiesto tu questa operazione, puoi ignorare questa email.\n\n" .
-        "Per reimpostare la password, apri questo link (valido 30 minuti):\n" .
-        $resetUrl . "\n\n" .
-        "Moki SUP Club\n";
+        $resetUrl = 'https://mokiclub.infinityfreeapp.com/admin/reset_password.php?token=' . urlencode($token);
 
-    // Invia testo semplice (più compatibile)
-    inviaEmail($admin['email'], $subject, $body);
+        $subject = 'Reset password area admin Moki Club';
+        $textBody =
+            "Ciao " . $adminUsername . ",\n\n" .
+            "Per reimpostare la password, apri questo link (valido 30 minuti):\n" .
+            $resetUrl . "\n\n" .
+            "Se non hai richiesto tu questa operazione, ignora questa email.\n";
+
+        $htmlBody = nl2br(htmlspecialchars($textBody, ENT_QUOTES, 'UTF-8'));
+
+        // This should also write into email_log now
+        inviaEmail('admin_password_reset', $adminEmail, $subject, $htmlBody);
+    }
 }
 
-// Risposta sempre generica
 header('Location: forgot_password.php?sent=1');
 exit();
