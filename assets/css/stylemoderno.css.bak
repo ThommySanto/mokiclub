@@ -1,0 +1,670 @@
+/* ==========================================================================
+   RESET BASE, VARIABILI E FONT (MOKI SUP BLACK & WHITE STYLE)
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Inter:wght@300;400;600&display=swap');
+
+:root {
+    --primary-color: #111111;
+    /* Deep Black */
+    --secondary-color: #6fb21b;
+    /* Moki Green Accent */
+    --accent-color: #333333;
+    /* Dark Grey */
+    --dark-color: #111111;
+    /* Text Dark */
+    --light-bg: #ffffff;
+    /* Clean White */
+    --grey-bg: #f5f5f5;
+    /* Subtle Grey */
+
+    --success-color: #27ae60;
+    --error-color: #e74c3c;
+
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 15px 35px rgba(0, 0, 0, 0.2);
+
+    --radius-sm: 4px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-pill: 50px;
+
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--light-bg);
+    color: var(--dark-color);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: -0.5px;
+    color: var(--primary-color);
+}
+
+h1 {
+    font-size: 2.5rem;
+    line-height: 1.1;
+}
+
+h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+}
+
+a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+a:hover {
+    color: var(--secondary-color);
+}
+
+/* ==========================================================================
+   HEADER (PREMIUM BLACK)
+   ========================================================================== */
+.site-header {
+    background: #111111;
+    /* Sleek Black */
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.header-container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-area a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: white;
+    /* Logo text in white */
+}
+
+.logo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--secondary-color);
+    transition: var(--transition);
+}
+
+.site-name {
+    font-size: 20px;
+    font-weight: 900;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.admin-link {
+    background: transparent;
+    color: white !important;
+    padding: 8px 20px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.admin-link:hover {
+    background: var(--secondary-color);
+    border-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   HERO SECTION
+   ========================================================================== */
+.hero {
+    height: 70vh;
+    min-height: 500px;
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('/assets/img/sfondo.jpg') center/cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: white;
+    flex-grow: 1;
+    /* Fills the space above the footer */
+}
+
+.hero-content h1 {
+    color: white;
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    margin-bottom: 30px;
+    font-weight: 400;
+    opacity: 0.9;
+}
+
+/* Buttons */
+.button-container {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.main-button,
+.btn-primary {
+    background: var(--secondary-color);
+    color: white;
+    padding: 12px 35px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+}
+
+.secondary-button,
+.btn-secondary {
+    background: white;
+    color: var(--primary-color);
+    padding: 12px 35px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.main-button:hover,
+.btn-primary:hover {
+    background: #5a8f15;
+    transform: scale(1.05);
+}
+
+.secondary-button:hover,
+.btn-secondary:hover {
+    background: var(--grey-bg);
+    border-color: var(--primary-color);
+}
+
+/* ==========================================================================
+   FORMS & CARDS
+   ========================================================================== */
+.form-wrapper {
+    padding: 60px 0;
+    background: #fdfdfd;
+    flex-grow: 1;
+    /* Fills space above footer */
+}
+
+.form-card {
+    background: white;
+    padding: 40px;
+    border-radius: var(--radius-md);
+    box-shadow: 0 5px 30px rgba(0, 0, 0, 0.05);
+    width: 90%;
+    max-width: 700px;
+    margin: 0 auto;
+    border: 1px solid #eee;
+}
+
+.form-title {
+    text-align: center;
+    color: var(--primary-color);
+    margin-bottom: 30px;
+    font-size: 2rem;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.section-title {
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    padding-bottom: 8px;
+    border-bottom: 3px solid var(--secondary-color);
+    margin: 30px 0 15px;
+    display: inline-block;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 15px;
+    margin-bottom: 15px;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 4px rgba(111, 178, 27, 0.2), 0 0 0 1px var(--secondary-color);
+    transform: translateY(-2px);
+}
+
+label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 5px;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Area Firma Digitale */
+.signature-section {
+    margin: 30px 0;
+    background: rgba(0, 0, 0, 0.02);
+    padding: 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid #eee;
+}
+
+.signature-canvas,
+#signature-pad {
+    width: 100%;
+    height: 200px;
+    border-radius: var(--radius-md);
+    background: white;
+    background-image: repeating-linear-gradient(transparent, transparent 38px, rgba(111, 178, 27, 0.1) 39px, rgba(111, 178, 27, 0.1) 40px);
+    border: 2px dashed var(--secondary-color);
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%236fb21b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"></path><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path><path d="M2 2l7.586 7.586"></path><circle cx="11" cy="11" r="2"></circle></svg>') 0 24, auto;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.clear-signature {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: var(--dark-color);
+    color: white;
+    border: none;
+    border-radius: var(--radius-pill);
+    font-size: 14px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.clear-signature:hover {
+    background: var(--secondary-color);
+}
+
+
+/* ==========================================================================
+   ADMIN TABLES
+   ========================================================================== */
+.admin-container {
+    padding: 50px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-grow: 1;
+    /* Fills space above footer */
+}
+
+.table-container {
+    background: white;
+    box-shadow: var(--shadow-md);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid #eee;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th {
+    background: #111111;
+    color: white;
+    padding: 15px;
+    text-align: left;
+    text-transform: uppercase;
+    font-size: 12px;
+    border-bottom: 2px solid var(--secondary-color);
+}
+
+.admin-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.admin-table tr:hover {
+    background: #fafafa;
+}
+
+/* Mobile Table to Cards */
+@media (max-width: 768px) {
+
+    .admin-table,
+    .admin-table thead,
+    .admin-table tbody,
+    .admin-table th,
+    .admin-table td,
+    .admin-table tr {
+        display: block;
+    }
+
+    .admin-table thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+
+    .admin-table tr {
+        border: 1px solid #eee;
+        margin-bottom: 15px;
+        border-radius: var(--radius-md);
+        background: white;
+        box-shadow: var(--shadow-sm);
+        padding: 10px;
+    }
+
+    .admin-table td {
+        border: none;
+        border-bottom: 1px solid #f5f5f5;
+        position: relative;
+        padding-left: 50%;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        text-align: right;
+    }
+
+    .admin-table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: bold;
+        text-align: left;
+        color: var(--primary-color);
+        font-size: 12px;
+        text-transform: uppercase;
+    }
+
+    .admin-actions {
+        justify-content: center;
+        padding-top: 10px;
+    }
+}
+
+.admin-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.admin-actions a {
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: white !important;
+    display: inline-block;
+}
+
+.admin-actions a:first-child {
+    background: #10b981;
+    /* Green for Edit */
+}
+
+.admin-actions a:first-child:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.admin-actions a:last-child {
+    background: #ef4444;
+    /* Red for Delete */
+}
+
+.admin-actions a:last-child:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   DASHBOARD BENTO (MOKI BRANDED)
+   ========================================================================== */
+.admin-dashboard-bento {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.bento-card {
+    grid-column: span 4;
+    padding: 30px;
+    border-radius: var(--radius-md);
+    color: white;
+    text-align: center;
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    animation: fadeInUp 0.6s ease backwards;
+}
+
+.bento-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-lg);
+}
+
+.bento-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.bento-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.bento-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.bento-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.bento-card:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+
+.bento-iscritti {
+    grid-column: span 8;
+    background: #10b981;
+}
+
+.bento-rimessaggi {
+    background: #f59e0b;
+}
+
+.bento-admin {
+    background: #3b82f6;
+}
+
+.bento-log {
+    background: #8b5cf6;
+}
+
+.bento-logout {
+    background: #ef4444;
+}
+
+
+.bento-card h3 {
+    color: white !important;
+    margin-bottom: 5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.bento-card p {
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 14px;
+    margin: 0;
+}
+
+.bento-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+    display: block;
+}
+
+/* ==========================================================================
+   FOOTER (SLEEK BLACK)
+   ========================================================================== */
+.site-footer {
+    background: #111111;
+    color: white;
+    padding: 30px 20px;
+    text-align: center;
+    margin-top: auto;
+    /* Pushes footer to the bottom */
+}
+
+/* MESSAGES */
+.success-message,
+.error-message {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: var(--radius-sm);
+    color: white;
+    font-weight: 700;
+    box-shadow: var(--shadow-lg);
+    z-index: 2000;
+}
+
+.success-message {
+    background: var(--success-color);
+}
+
+.error-message {
+    background: var(--error-color);
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .hero-content h1 {
+        font-size: 2.2rem;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .bento-card {
+        grid-column: span 12 !important;
+        flex-grow: 0;
+    }
+}
+
+/* ==========================================================================
+   HOMEPAGE STATS & ANIMATIONS
+   ========================================================================== */
+.stats-section {
+    padding: 60px 0;
+    background: white;
+    text-align: center;
+}
+
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.stat-item {
+    padding: 20px;
+    border-radius: var(--radius-md);
+    transition: var(--transition);
+}
+
+.stat-item:hover {
+    transform: translateY(-5px);
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--secondary-color);
+    margin-bottom: 5px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
