@@ -4,7 +4,24 @@ require_once dirname(__DIR__) . '/includes/security_utils.php';
 
 date_default_timezone_set('Europe/Rome');
 
-$appEnv = getenv('APP_ENV') ?: 'production';
+
+// Caricamento segreti: prima getenv, poi config/secrets.php se esiste
+$secrets = [];
+if (file_exists(__DIR__ . '/secrets.php')) {
+    $secrets = include __DIR__ . '/secrets.php';
+    if (!is_array($secrets)) $secrets = [];
+}
+
+function app_secret($key, $default = null) {
+    // getenv ha priorità, poi secrets.php, poi default
+    $env = getenv($key);
+    if ($env !== false && $env !== '') return $env;
+    global $secrets;
+    if (isset($secrets[$key]) && $secrets[$key] !== '') return $secrets[$key];
+    return $default;
+}
+
+$appEnv = app_secret('APP_ENV', 'production');
 $isDebugEnv = ($appEnv === 'local' || $appEnv === 'development');
 
 error_reporting(E_ALL);
@@ -13,21 +30,20 @@ ini_set('log_errors', '1');
 
 app_start_secure_session();
 
-$isLocalHost = (($_SERVER['SERVER_NAME'] ?? '') === 'localhost');
-if ($isLocalHost) {
-    // CONFIG LOCALE
-    $host = getenv('DB_HOST') ?: "localhost";
-    $user = getenv('DB_USER') ?: "root";
-    $password = getenv('DB_PASS') ?: "";
-    $database = getenv('DB_NAME') ?: "moki";
-} else {
-    // CONFIG ONLINE (InfinityFree)
-    $host = getenv('DB_HOST') ?: "sql306.infinityfree.com";
-    $user = getenv('DB_USER') ?: "if0_41207556";
-    $password = getenv('DB_PASS') ?: "Moki2026";
-    $database = getenv('DB_NAME') ?: "if0_41207556_moki";
-}
+// DB config: in localhost possiamo usare default; online richiediamo secrets/env (niente credenziali hardcoded)
+$isLocal = (($_SERVER['SERVER_NAME'] ?? '') === 'localhost');
 
+$host = app_secret('DB_HOST', $isLocal ? 'localhost' : null);
+$user = app_secret('DB_USER', $isLocal ? 'root' : null);
+$password = app_secret('DB_PASS', $isLocal ? '' : null);
+$database = app_secret('DB_NAME', $isLocal ? 'clubmoki' : null);
+
+// Se online e manca config DB, fallisci in modo controllato
+if (!$isLocal && (!$host || !$user || !$password || !$database)) {
+    error_log('Database config missing: set DB_HOST/DB_USER/DB_PASS/DB_NAME via env or config/secrets.php');
+    http_response_code(500);
+    exit('Servizio temporaneamente non disponibile.');
+}
 mysqli_report(MYSQLI_REPORT_OFF);
 $conn = @new mysqli($host, $user, $password, $database);
 
