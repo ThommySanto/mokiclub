@@ -14,7 +14,10 @@ if (isset($_SESSION["admin"])) {
 }
 
 /* =========================
-   CREA TABELLA SE NON ESISTE
+   (Opzionale) CREA TABELLA SE NON ESISTE
+   Nota: nel tuo DB reale la tabella ha più colonne (ruolo, data_creazione, email).
+   Qui lascio il tuo codice, ma idealmente questo blocco va rimosso in produzione
+   per evitare drift dello schema.
 ========================= */
 $create_table_sql = "CREATE TABLE IF NOT EXISTS utenti_admin (
     id INT(11) NOT NULL AUTO_INCREMENT,
@@ -22,7 +25,6 @@ $create_table_sql = "CREATE TABLE IF NOT EXISTS utenti_admin (
     password VARCHAR(255) NOT NULL,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8";
-
 $conn->query($create_table_sql);
 
 /* =========================
@@ -44,7 +46,7 @@ $stmt->execute();
 $rootResult = $stmt->get_result();
 $rootUser = $rootResult->fetch_assoc();
 
-if ($adminUser && (int) $adminUser['id'] !== 0 && !$rootUser) {
+if ($adminUser && (int)$adminUser['id'] !== 0 && !$rootUser) {
     $stmt = $conn->prepare("UPDATE utenti_admin SET id = 0 WHERE username = ?");
     $stmt->bind_param("s", $default_username);
     $stmt->execute();
@@ -67,78 +69,49 @@ if (!$rootUser && !empty($default_password)) {
 }
 
 $errore = "";
-$successo = "";
 $rateKeyBase = 'admin_login:' . app_request_ip();
 $maxAttempts = 7;
 $windowSeconds = 900;
 
 /* =========================
-   LOGIN / RESET
+   LOGIN
 ========================= */
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+if (($_SERVER["REQUEST_METHOD"] ?? '') === "POST") {
     app_require_csrf();
 
     if (isset($_POST['login'])) {
-
-        $username = trim($_POST["username"]);
-        $password = $_POST["password"];
+        $username = trim((string)($_POST["username"] ?? ''));
+        $password = (string)($_POST["password"] ?? '');
         $rateKey = $rateKeyBase . ':' . strtolower($username);
 
         if (app_rate_limit_is_blocked($rateKey, $maxAttempts, $windowSeconds)) {
             $retryIn = app_rate_limit_retry_after($rateKey, $windowSeconds);
             $errore = "Troppi tentativi falliti. Riprova tra " . $retryIn . " secondi.";
         } else {
-
-            $stmt = $conn->prepare("SELECT username, password FROM utenti_admin WHERE username = ?");
+            $stmt = $conn->prepare("SELECT username, password FROM utenti_admin WHERE username = ? LIMIT 1");
             $stmt->bind_param("s", $username);
             $stmt->execute();
             $result = $stmt->get_result();
 
-            if ($result->num_rows === 1) {
+            if ($result && $result->num_rows === 1) {
                 $user = $result->fetch_assoc();
-
-                if (password_verify($password, $user["password"])) {
+                if ($user && password_verify($password, $user["password"])) {
                     app_rate_limit_reset($rateKey);
                     session_regenerate_id(true);
                     $_SESSION["admin"] = $user["username"];
                     $_SESSION['last_activity'] = time();
                     header("Location: dashboard.php");
                     exit();
-                } else {
-                    app_rate_limit_increment($rateKey, $windowSeconds);
-                    $errore = "Credenziali non valide";
                 }
-            } else {
-                app_rate_limit_increment($rateKey, $windowSeconds);
-                $errore = "Credenziali non valide";
-            }
-        }
-    } elseif (isset($_POST['reset'])) {
-
-        $username = trim($_POST["username"]);
-
-        if ($username === '' || $username === 'admin') {
-            $errore = "Per sicurezza, il reset del super-admin non e' consentito da questa pagina.";
-        } else {
-            try {
-                $new_password = substr(bin2hex(random_bytes(8)), 0, 12);
-            } catch (Throwable $e) {
-                $new_password = substr(hash('sha256', uniqid('', true)), 0, 12);
             }
 
-            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
-
-            $stmt = $conn->prepare("UPDATE utenti_admin SET password = ? WHERE username = ?");
-            $stmt->bind_param("ss", $hashed_password, $username);
-
-            if ($stmt->execute() && $stmt->affected_rows > 0) {
-                $successo = "Password resettata. Nuova password temporanea: " . $new_password;
-            } else {
-                $errore = "Utente non trovato";
-            }
+            app_rate_limit_increment($rateKey, $windowSeconds);
+            $errore = "Credenziali non valide";
         }
     }
 }
+
+$resetOk = isset($_GET['reset']) && $_GET['reset'] === '1';
 ?>
 <!DOCTYPE html>
 <html lang="it">
@@ -164,15 +137,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <p>Accedi all'area riservata</p>
             </div>
 
-            <?php if ($errore): ?>
-                <div class="error-container">
-                    <?= htmlspecialchars($errore) ?>
+            <?php if ($resetOk): ?>
+                <div class="success-container">
+                    Password aggiornata correttamente. Ora puoi accedere.
                 </div>
             <?php endif; ?>
 
-            <?php if ($successo): ?>
-                <div class="success-container">
-                    <?= htmlspecialchars($successo) ?>
+            <?php if ($errore): ?>
+                <div class="error-container">
+                    <?= htmlspecialchars($errore, ENT_QUOTES, 'UTF-8') ?>
                 </div>
             <?php endif; ?>
 
@@ -181,8 +154,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="form-group">
                     <div class="input-group neu-input">
                         <input type="text" id="username" name="username" required autocomplete="username"
-                            placeholder=" "
-                            value="<?= isset($_POST['username']) ? htmlspecialchars($_POST['username']) : '' ?>">
+                               placeholder=" "
+                               value="<?= isset($_POST['username']) ? htmlspecialchars((string)$_POST['username'], ENT_QUOTES, 'UTF-8') : '' ?>">
                         <label for="username">Username</label>
                         <div class="input-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,7 +169,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <div class="form-group">
                     <div class="input-group neu-input password-group">
                         <input type="password" id="password" name="password" required autocomplete="current-password"
-                            placeholder=" ">
+                               placeholder=" ">
                         <label for="password">Password</label>
                         <div class="input-icon">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -205,16 +178,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                             </svg>
                         </div>
                         <button type="button" class="password-toggle neu-toggle" id="passwordToggle"
-                            aria-label="Nascondi/Mostra password">
-                            <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2">
+                                aria-label="Nascondi/Mostra password">
+                            <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                 <circle cx="12" cy="12" r="3" />
                             </svg>
                             <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" style="display:none;">
-                                <path
-                                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                 stroke-width="2" style="display:none;">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                                 <line x1="1" y1="1" x2="23" y2="23" />
                             </svg>
                         </button>
@@ -224,12 +195,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <button type="submit" name="login" class="neu-button login-btn">
                     <span class="btn-text">Accedi</span>
                 </button>
-
-                <button type="submit" name="reset" class="neu-button reset-btn"
-                    style="box-shadow: 4px 4px 10px #bec3cf, -4px -4px 10px #ffffff; font-size: 14px; padding: 12px; margin-top: 10px;">
-                    <span class="btn-text">Reset Password</span>
-                </button>
             </form>
+
+            <div style="text-align:center; margin-top: 18px;">
+                <a href="forgot_password.php" style="font-size: 15px; color: #007bff; text-decoration: underline;">
+                    Password dimenticata?
+                </a>
+            </div>
 
             <div class="divider">
                 <div class="divider-line"></div>
@@ -262,7 +234,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             }
         });
 
-        // Simple form loading state
         document.getElementById('loginForm').addEventListener('submit', function () {
             const loginBtn = this.querySelector('.login-btn');
             loginBtn.classList.add('loading');
